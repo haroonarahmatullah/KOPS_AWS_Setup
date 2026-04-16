@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>From Zero to Kubernetes: A Complete KOPS Guide on AWS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Source+Sans+3:wght@300;400;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #1a1a1a;
+    --muted: #6b6b6b;
+    --light: #f7f4ef;
+    --border: #e8e3da;
+    --accent: #1a6b4a;
+    --accent-light: #e8f5ee;
+    --accent-mid: #2d9e6b;
+    --warn: #c97b2a;
+    --warn-light: #fdf3e3;
+    --code-bg: #f4f1eb;
+    --code-border: #d9d4c9;
+    --white: #ffffff;
+  }
+
+  body {
+    font-family: 'Source Sans 3', sans-serif;
+    font-weight: 400;
+    color: var(--ink);
+    background: var(--white);
+    line-height: 1.6;
+  }
+
+  /* TOP NAV */
+  nav {
+    position: sticky;
+    top: 0;
+    background: rgba(255,255,255,0.96);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 100;
+  }
+  .nav-brand { font-family: 'Lora', serif; font-size: 22px; color: var(--ink); letter-spacing: -0.5px; }
+  .nav-tags { display: flex; gap: 8px; }
+  .nav-tag {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+  .nav-tag.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+  /* HERO */
+  .hero {
+    background: var(--light);
+    border-bottom: 1px solid var(--border);
+    padding: 80px 40px 60px;
+    max-width: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 320px; height: 320px;
+    background: radial-gradient(circle, rgba(45,158,107,0.12) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .hero-inner { max-width: 760px; margin: 0 auto; position: relative; }
+  .hero-eyebrow {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .hero-eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 28px;
+    height: 2px;
+    background: var(--accent);
+  }
+  .hero h1 {
+    font-family: 'Lora', serif;
+    font-size: clamp(30px, 5vw, 46px);
+    line-height: 1.2;
+    letter-spacing: -0.5px;
+    color: var(--ink);
+    margin-bottom: 20px;
+    max-width: 680px;
+  }
+  .hero-sub {
+    font-size: 18px;
+    color: var(--muted);
+    line-height: 1.7;
+    max-width: 600px;
+    margin-bottom: 32px;
+    font-weight: 300;
+  }
+  .hero-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .author-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600; color: white;
+    flex-shrink: 0;
+  }
+  .meta-divider { width: 3px; height: 3px; background: var(--border); border-radius: 50%; }
+  .read-time {
+    background: var(--accent-light);
+    color: var(--accent);
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+  }
+
+  /* HERO IMAGE */
+  .hero-image-wrap {
+    max-width: 860px;
+    margin: 0 auto -40px;
+    position: relative;
+    padding: 0 40px;
+  }
+  .hero-image-wrap img {
+    width: 100%;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.10);
+    display: block;
+  }
+  .img-caption {
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 8px;
+    font-style: italic;
+  }
+
+  /* ARTICLE BODY */
+  article {
+    max-width: 720px;
+    margin: 80px auto 0;
+    padding: 0 40px 100px;
+  }
+
+  /* SECTIONS */
+  .section { margin-bottom: 60px; }
+
+  h2 {
+    font-family: 'Lora', serif;
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 16px;
+    margin-top: 56px;
+    line-height: 1.3;
+    letter-spacing: -0.3px;
+  }
+  h3 {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-top: 32px;
+    margin-bottom: 10px;
+    letter-spacing: 0.1px;
+  }
+  p {
+    font-size: 17px;
+    line-height: 1.8;
+    color: #2d2d2d;
+    margin-bottom: 18px;
+  }
+
+  /* PULL QUOTE */
+  .pull-quote {
+    border-left: 3px solid var(--accent);
+    padding: 16px 24px;
+    margin: 36px 0;
+    background: var(--accent-light);
+    border-radius: 0 8px 8px 0;
+  }
+  .pull-quote p {
+    font-family: 'Lora', serif;
+    font-size: 18px;
+    font-style: italic;
+    color: var(--accent);
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  /* INFO BOX */
+  .info-box {
+    background: var(--warn-light);
+    border: 1px solid #f0d9b0;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 24px 0;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .info-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .info-box p { font-size: 15px; margin: 0; color: #6b4c1a; }
+  .info-box strong { color: #8a5e12; }
+
+  /* CODE BLOCK */
+  .code-block {
+    background: var(--code-bg);
+    border: 1px solid var(--code-border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 20px 0;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .code-header {
+    background: var(--code-border);
+    padding: 7px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .code-dots { display: flex; gap: 5px; }
+  .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-r { background: #ff6259; }
+  .dot-y { background: #ffbd2e; }
+  .dot-g { background: #28c840; }
+  pre {
+    padding: 18px 20px;
+    overflow-x: auto;
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: #3a3530;
+  }
+  .cmd { color: var(--accent); font-weight: 500; }
+  .flag { color: var(--warn); }
+  .comment { color: #9a9187; font-style: italic; }
+  .key { color: #7b5ea7; }
+  .val { color: #c0392b; }
+
+  /* STEP CARDS */
+  .steps { display: flex; flex-direction: column; gap: 16px; margin: 28px 0; }
+  .step-card {
+    display: flex;
+    gap: 16px;
+    padding: 18px 20px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    transition: border-color 0.2s;
+  }
+  .step-card:hover { border-color: var(--accent-mid); }
+  .step-num {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    color: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .step-content h4 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .step-content p { font-size: 14px; color: var(--muted); margin: 0; line-height: 1.5; }
+
+  /* TABLE */
+  .cmd-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 14px;
+  }
+  .cmd-table thead tr { background: var(--light); }
+  .cmd-table th {
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+  .cmd-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .cmd-table td:first-child {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .cmd-table tr:last-child td { border-bottom: none; }
+
+  /* INLINE IMG */
+  .inline-img {
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    margin: 28px 0 8px;
+    display: block;
+  }
+
+  /* BADGE ROW */
+  .badge-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+  .badge {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 20px;
+    letter-spacing: 0.3px;
+  }
+  .badge-green { background: var(--accent-light); color: var(--accent); }
+  .badge-amber { background: var(--warn-light); color: var(--warn); }
+  .badge-gray { background: var(--light); color: var(--muted); }
+
+  /* YAML BLOCK */
+  .yaml { color: #3a3530; }
+  .yaml .key { color: #7b5ea7; }
+  .yaml .val { color: #c0392b; }
+  .yaml .comment { color: #9a9187; }
+
+  /* FOOTER */
+  footer {
+    background: var(--light);
+    border-top: 1px solid var(--border);
+    padding: 48px 40px;
+    text-align: center;
+  }
+  footer p { font-size: 14px; color: var(--muted); }
+  footer strong { color: var(--ink); }
+  .footer-tags { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+  .footer-tag {
+    font-size: 13px; color: var(--muted);
+    padding: 5px 14px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+  }
+
+  @media (max-width: 600px) {
+    nav { padding: 12px 20px; }
+    .hero { padding: 50px 20px 40px; }
+    .hero-image-wrap { padding: 0 20px; }
+    article { padding: 0 20px 60px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="nav-brand">DevOps Weekly</span>
+  <div class="nav-tags">
+    <span class="nav-tag active">Kubernetes</span>
+    <span class="nav-tag">AWS</span>
+    <span class="nav-tag">DevOps</span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">Kubernetes on AWS</div>
+    <h1>From Zero to Kubernetes: A Complete KOPS Setup Guide on AWS</h1>
+    <p class="hero-sub">
+      Learn how to spin up a production-grade Kubernetes cluster on AWS using KOPS — from EC2 provisioning to RBAC security — with every command you actually need.
+    </p>
+    <div class="hero-meta">
+      <div class="author-avatar">AK</div>
+      <span>Haroon · Cloud Engineer</span>
+      <span class="meta-divider"></span>
+      <span>March 3, 2025</span>
+      <span class="meta-divider"></span>
+      <span class="read-time">12 min read</span>
+    </div>
+  </div>
+</div>
+
+<!-- HERO IMAGE -->
+<div class="hero-image-wrap">
+  <div style="background:#f0ede6;border:1px solid #e8e3da;border-radius:12px;padding:36px 32px 28px;box-shadow:0 20px 60px rgba(0,0,0,0.10);">
+  <svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;font-family:'Source Sans 3',sans-serif;">
+    <!-- CONTROL PLANE box -->
+    <rect x="20" y="20" width="220" height="260" rx="10" fill="#ffffff" stroke="#c8d8c0" stroke-width="1.5"/>
+    <rect x="20" y="20" width="220" height="36" rx="10" fill="#1a6b4a"/>
+    <rect x="20" y="44" width="220" height="12" fill="#1a6b4a"/>
+    <text x="130" y="43" text-anchor="middle" font-size="13" font-weight="600" fill="#ffffff" letter-spacing="0.3">Control Plane (Master)</text>
+    <!-- components -->
+    <rect x="38" y="72" width="184" height="34" rx="6" fill="#e8f5ee" stroke="#a8d4ba" stroke-width="1"/>
+    <text x="130" y="87" text-anchor="middle" font-size="11.5" fill="#1a6b4a" font-weight="600">API Server</text>
+    <text x="130" y="100" text-anchor="middle" font-size="10" fill="#4a9a6a">Entry point for all requests</text>
+
+    <rect x="38" y="116" width="184" height="34" rx="6" fill="#e8f5ee" stroke="#a8d4ba" stroke-width="1"/>
+    <text x="130" y="131" text-anchor="middle" font-size="11.5" fill="#1a6b4a" font-weight="600">etcd</text>
+    <text x="130" y="144" text-anchor="middle" font-size="10" fill="#4a9a6a">Distributed state store</text>
+
+    <rect x="38" y="160" width="184" height="34" rx="6" fill="#e8f5ee" stroke="#a8d4ba" stroke-width="1"/>
+    <text x="130" y="175" text-anchor="middle" font-size="11.5" fill="#1a6b4a" font-weight="600">Scheduler</text>
+    <text x="130" y="188" text-anchor="middle" font-size="10" fill="#4a9a6a">Assigns pods to nodes</text>
+
+    <rect x="38" y="204" width="184" height="34" rx="6" fill="#e8f5ee" stroke="#a8d4ba" stroke-width="1"/>
+    <text x="130" y="219" text-anchor="middle" font-size="11.5" fill="#1a6b4a" font-weight="600">Controller Manager</text>
+    <text x="130" y="232" text-anchor="middle" font-size="10" fill="#4a9a6a">Maintains desired state</text>
+
+    <text x="130" y="270" text-anchor="middle" font-size="10" fill="#8ab09a">kubectl / API calls</text>
+
+    <!-- Arrow from master to workers -->
+    <line x1="242" y1="150" x2="278" y2="150" stroke="#1a6b4a" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <polygon points="278,145 288,150 278,155" fill="#1a6b4a"/>
+
+    <!-- WORKER NODE 1 -->
+    <rect x="290" y="20" width="210" height="124" rx="10" fill="#ffffff" stroke="#c8cfe8" stroke-width="1.5"/>
+    <rect x="290" y="20" width="210" height="36" rx="10" fill="#2d4b9e"/>
+    <rect x="290" y="44" width="210" height="12" fill="#2d4b9e"/>
+    <text x="395" y="43" text-anchor="middle" font-size="13" font-weight="600" fill="#ffffff" letter-spacing="0.3">Worker Node 1</text>
+    <rect x="306" y="68" width="82" height="32" rx="6" fill="#eef0fc" stroke="#b0bcee" stroke-width="1"/>
+    <text x="347" y="83" text-anchor="middle" font-size="10.5" fill="#2d4b9e" font-weight="600">kubelet</text>
+    <text x="347" y="96" text-anchor="middle" font-size="9.5" fill="#5a74cb">Node agent</text>
+    <rect x="400" y="68" width="82" height="32" rx="6" fill="#eef0fc" stroke="#b0bcee" stroke-width="1"/>
+    <text x="441" y="83" text-anchor="middle" font-size="10.5" fill="#2d4b9e" font-weight="600">kube-proxy</text>
+    <text x="441" y="96" text-anchor="middle" font-size="9.5" fill="#5a74cb">Networking</text>
+    <!-- pods row -->
+    <rect x="306" y="110" width="52" height="24" rx="5" fill="#fdf3e3" stroke="#e8c880" stroke-width="1"/>
+    <text x="332" y="126" text-anchor="middle" font-size="10" fill="#c97b2a" font-weight="600">Pod</text>
+    <rect x="366" y="110" width="52" height="24" rx="5" fill="#fdf3e3" stroke="#e8c880" stroke-width="1"/>
+    <text x="392" y="126" text-anchor="middle" font-size="10" fill="#c97b2a" font-weight="600">Pod</text>
+    <rect x="426" y="110" width="52" height="24" rx="5" fill="#fdf3e3" stroke="#e8c880" stroke-width="1"/>
+    <text x="452" y="126" text-anchor="middle" font-size="10" fill="#c97b2a" font-weight="600">Pod</text>
+
+    <!-- WORKER NODE 2 -->
+    <rect x="290" y="156" width="210" height="124" rx="10" fill="#ffffff" stroke="#c8cfe8" stroke-width="1.5"/>
+    <rect x="290" y="156" width="210" height="36" rx="10" fill="#2d4b9e"/>
+    <rect x="290" y="180" width="210" height="12" fill="#2d4b9e"/>
+    <text x="395" y="179" text-anchor="middle" font-size="13" font-weight="600" fill="#ffffff" letter-spacing="0.3">Worker Node 2</text>
+    <rect x="306" y="204" width="82" height="32" rx="6" fill="#eef0fc" stroke="#b0bcee" stroke-width="1"/>
+    <text x="347" y="219" text-anchor="middle" font-size="10.5" fill="#2d4b9e" font-weight="600">kubelet</text>
+    <text x="347" y="232" text-anchor="middle" font-size="9.5" fill="#5a74cb">Node agent</text>
+    <rect x="400" y="204" width="82" height="32" rx="6" fill="#eef0fc" stroke="#b0bcee" stroke-width="1"/>
+    <text x="441" y="219" text-anchor="middle" font-size="10.5" fill="#2d4b9e" font-weight="600">kube-proxy</text>
+    <text x="441" y="232" text-anchor="middle" font-size="9.5" fill="#5a74cb">Networking</text>
+    <rect x="306" y="246" width="52" height="24" rx="5" fill="#fdf3e3" stroke="#e8c880" stroke-width="1"/>
+    <text x="332" y="262" text-anchor="middle" font-size="10" fill="#c97b2a" font-weight="600">Pod</text>
+    <rect x="366" y="246" width="52" height="24" rx="5" fill="#fdf3e3" stroke="#e8c880" stroke-width="1"/>
+    <text x="392" y="262" text-anchor="middle" font-size="10" fill="#c97b2a" font-weight="600">Pod</text>
+
+    <!-- S3 STATE STORE -->
+    <rect x="530" y="90" width="210" height="120" rx="10" fill="#ffffff" stroke="#e0c8a0" stroke-width="1.5"/>
+    <rect x="530" y="90" width="210" height="36" rx="10" fill="#c97b2a"/>
+    <rect x="530" y="114" width="210" height="12" fill="#c97b2a"/>
+    <text x="635" y="113" text-anchor="middle" font-size="13" font-weight="600" fill="#ffffff" letter-spacing="0.3">S3 State Store</text>
+    <text x="635" y="148" text-anchor="middle" font-size="11" fill="#8a5e12">haroon-kops-testbkt1234</text>
+    <text x="635" y="164" text-anchor="middle" font-size="10.5" fill="#b07030">.k8s.local</text>
+    <text x="635" y="184" text-anchor="middle" font-size="10" fill="#c97b2a">Versioned cluster config</text>
+    <text x="635" y="198" text-anchor="middle" font-size="10" fill="#c97b2a">Recovery &amp; rollback</text>
+
+    <!-- Arrow: master ↔ S3 -->
+    <line x1="510" y1="150" x2="528" y2="150" stroke="#c97b2a" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <polygon points="526,145 536,150 526,155" fill="#c97b2a"/>
+
+    <!-- KOPS label -->
+    <text x="515" y="135" text-anchor="middle" font-size="9" fill="#c97b2a">KOPS</text>
+
+    <!-- Legend -->
+    <rect x="530" y="228" width="10" height="10" rx="2" fill="#1a6b4a"/>
+    <text x="545" y="238" font-size="10" fill="#555">Control Plane</text>
+    <rect x="620" y="228" width="10" height="10" rx="2" fill="#2d4b9e"/>
+    <text x="635" y="238" font-size="10" fill="#555">Worker Node</text>
+    <rect x="530" y="248" width="10" height="10" rx="2" fill="#c97b2a"/>
+    <text x="545" y="258" font-size="10" fill="#555">S3 / State Store</text>
+    <rect x="620" y="248" width="10" height="10" rx="2" fill="#e8c880" stroke="#c97b2a" stroke-width="1"/>
+    <text x="635" y="258" font-size="10" fill="#555">Pod</text>
+  </svg>
+  </div>
+  <p class="img-caption">KOPS cluster architecture: Control Plane manages state via S3 and orchestrates Worker Nodes running application Pods</p>
+</div>
+
+<!-- ARTICLE -->
+<article>
+
+  <section class="section">
+    <p>
+      Managing containers at scale is one of the most demanding challenges in modern cloud engineering. Kubernetes solves this, but getting it running on AWS from scratch? That's where most teams stumble. <strong>KOPS (Kubernetes Operations)</strong> is the tool that bridges that gap — making it straightforward to provision, manage, and evolve production Kubernetes clusters entirely from the command line.
+    </p>
+    <p>
+      This guide walks you through the complete journey: standing up an EC2 instance as your control machine, creating an S3-backed state store, spinning up a multi-node cluster, working with namespaces, scaling nodes, and locking things down with RBAC. Every command is real and battle-tested.
+    </p>
+
+    <div class="pull-quote">
+      <p>"KOPS treats your entire cluster as infrastructure-as-code — stored in S3, versioned, and recoverable at any time."</p>
+    </div>
+  </section>
+
+  <!-- SECTION 1 -->
+  <h2>Setting Up Your Control Machine</h2>
+  <p>
+    Before touching Kubernetes, you need a bastion — a lightweight EC2 instance to run KOPS commands from. A <code>t2.micro</code> Amazon Linux 2 instance is all you need. Attach an IAM Role with Admin permissions to it (never hard-code credentials), and make sure the AWS CLI is available.
+  </p>
+
+  <h3>Installing kubectl and KOPS</h3>
+  <p>Run the following on your EC2 instance to install both tools and expose them on your system path:</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+      <span>bash — install kubectl &amp; kops</span>
+    </div>
+    <pre><span class="comment"># Download kubectl (latest stable)</span>
+<span class="cmd">curl -LO</span> https://dl.k8s.io/release/$(curl -L -s \
+  https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl
+
+<span class="comment"># Download KOPS v1.25</span>
+<span class="cmd">wget</span> https://github.com/kubernetes/kops/releases/download/v1.25.0/kops-linux-amd64
+
+<span class="comment"># Make both executables and move to PATH</span>
+<span class="cmd">chmod +x</span> kops-linux-amd64 kubectl
+<span class="cmd">mv</span> kubectl /usr/local/bin/kubectl
+<span class="cmd">mv</span> kops-linux-amd64 /usr/local/bin/kops
+
+<span class="comment"># Add to .bashrc (Amazon Linux only — Ubuntu skips this)</span>
+<span class="cmd">echo</span> <span class="val">'export PATH=$PATH:/usr/local/bin/'</span> >> ~/.bashrc
+<span class="cmd">source</span> ~/.bashrc</pre>
+  </div>
+
+  <div class="info-box">
+    <div class="info-icon">💡</div>
+    <p><strong>Ubuntu vs Amazon Linux:</strong> On Ubuntu, <code>/usr/local/bin</code> is already in <code>$PATH</code> by default — you can skip the <code>.bashrc</code> export step entirely.</p>
+  </div>
+
+  <!-- SECTION 2 -->
+  <h2>Creating Your S3 State Store</h2>
+
+  <img class="inline-img" src="https://miro.medium.com/v2/resize:fit:1400/0*-Zau0MeE0OASmWQk" alt="AWS S3 bucket for Kubernetes state" />
+  <p class="img-caption">S3 acts as a durable, versioned store for your entire cluster configuration</p>
+
+  <p>
+    KOPS stores all cluster configuration in an S3 bucket. This is a key design decision — it means your cluster is recoverable even if nodes are destroyed, because the desired state lives outside the cluster itself. Versioning ensures you can roll back any configuration change.
+  </p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+      <span>bash — create &amp; configure S3 state bucket</span>
+    </div>
+    <pre><span class="comment"># Create the bucket in ap-south-1</span>
+<span class="cmd">aws s3api create-bucket</span> \
+  <span class="flag">--bucket</span> haroon-kops-testbkt1234.k8s.local \
+  <span class="flag">--region</span> ap-south-1 \
+  <span class="flag">--create-bucket-configuration</span> LocationConstraint=ap-south-1
+
+<span class="comment"># Enable versioning for rollback capability</span>
+<span class="cmd">aws s3api put-bucket-versioning</span> \
+  <span class="flag">--bucket</span> haroon-kops-testbkt1234.k8s.local \
+  <span class="flag">--region</span> ap-south-1 \
+  <span class="flag">--versioning-configuration</span> Status=Enabled
+
+<span class="comment"># Set the env variable KOPS reads automatically</span>
+<span class="cmd">export</span> KOPS_STATE_STORE=s3://haroon-kops-testbkt1234.k8s.local</pre>
+  </div>
+
+  <!-- SECTION 3 -->
+  <h2>Spinning Up Your Cluster</h2>
+
+  <p>
+    With the state store in place, you're ready to create the cluster. KOPS separates the <em>declaration</em> of a cluster from its <em>provisioning</em> — <code>create cluster</code> writes config to S3, while <code>update cluster --yes</code> actually provisions the AWS infrastructure.
+  </p>
+
+  <div class="steps">
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h4>Declare the cluster</h4>
+        <p>Writes cluster spec to S3. Nothing is provisioned yet — this is purely configuration.</p>
+      </div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h4>Provision with <code>--yes</code></h4>
+        <p>Creates EC2 instances, ASGs, load balancers, and networking. AWS infrastructure is live after this.</p>
+      </div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h4>Validate and wait</h4>
+        <p>Poll cluster health for up to 10 minutes until all nodes and components are ready.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+      <span>bash — create, provision, validate</span>
+    </div>
+    <pre><span class="comment"># 1. Declare cluster (1 master c7i-flex.large, 2 workers t3.micro)</span>
+<span class="cmd">kops create cluster</span> \
+  <span class="flag">--name</span> haroon.k8s.local \
+  <span class="flag">--zones</span> ap-south-1a \
+  <span class="flag">--master-count=1</span> <span class="flag">--master-size</span> c7i-flex.large \
+  <span class="flag">--node-count=2</span>   <span class="flag">--node-size</span> t3.micro
+
+<span class="comment"># 2. Apply and grant admin kubeconfig</span>
+<span class="cmd">kops update cluster</span> --name haroon.k8s.local --yes --admin
+
+<span class="comment"># 3. Wait until all nodes pass health checks</span>
+<span class="cmd">kops validate cluster</span> --wait 10m</pre>
+  </div>
+
+  <p>
+    Once validated, check your nodes in the AWS Console — you'll see EC2 instances launched inside an Auto Scaling Group, fronted by a Classic Load Balancer (CLB). If you prefer an Application Load Balancer (ALB), edit the cluster spec and change <code>class: Classic</code> to <code>class: Network</code>.
+  </p>
+
+  <!-- SECTION 4 -->
+  <h2>Deploying Your First Application</h2>
+
+  <p>
+    With the cluster up, deploy a workload. Below is a minimal Deployment manifest running 4 replicas of a banking app image across your worker nodes. Note that the master node <em>never</em> schedules application pods — Kubernetes reserves it for control plane operations.
+  </p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+      <span>yaml — deployment.yml</span>
+    </div>
+    <pre class="yaml"><span class="key">apiVersion:</span> <span class="val">apps/v1</span>
+<span class="key">kind:</span>       <span class="val">Deployment</span>
+<span class="key">metadata:</span>
+  <span class="key">name:</span>   <span class="val">mb-deployment</span>
+  <span class="key">labels:</span>
+    <span class="key">app:</span> <span class="val">bank</span>
+<span class="key">spec:</span>
+  <span class="key">replicas:</span> <span class="val">4</span>
+  <span class="key">selector:</span>
+    <span class="key">matchLabels:</span>
+      <span class="key">app:</span> <span class="val">bank</span>
+  <span class="key">template:</span>
+    <span class="key">metadata:</span>
+      <span class="key">labels:</span>
+        <span class="key">app:</span> <span class="val">bank</span>
+    <span class="key">spec:</span>
+      <span class="key">containers:</span>
+      <span class="key">- name:</span>  <span class="val">cont1</span>
+        <span class="key">image:</span> <span class="val">haroon/mb-image:latest</span></pre>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+      <span>bash — deploy &amp; scale</span>
+    </div>
+    <pre><span class="cmd">kubectl create -f</span> deployment.yml
+<span class="cmd">kubectl get pods -o wide</span>    <span class="comment"># pods spread across worker nodes</span>
+
+<span class="comment"># Scale out to 10 replicas</span>
+<span class="cmd">kubectl scale deploy/mb-deployment</span> --replicas=10
+<span class="comment"># Scale back in</span>
+<span class="cmd">kubectl scale deploy/mb-deployment</span> --replicas=4</pre>
+  </div>
+
+  <!-- SECTION 5 -->
+  <h2>Namespaces: Isolated Lanes for Every Team</h2>
+
+  <img class="inline-img" src="https://kodekloud.com/blog/wp-content/uploads/2023/09/kubernetes-isolation-techniques-1024x529.webp" alt="Kubernetes namespace isolation diagram" />
+  <p class="img-caption">Namespaces provide isolated environments within a single cluster — no inter-namespace visibility by default</p>
+
+  <p>
+    Running a dedicated cluster for every team is expensive and operationally painful. Namespaces give you isolated, virtual clusters within a single physical cluster. Pods in the <code>dev</code> namespace cannot see pods in <code>prod</code> by default. Kubernetes ships with four built-in namespaces:
+  </p>
+
+  <div class="badge-row">
+    <span class="badge badge-green">default</span>
+    <span class="badge badge-amber">kube-system</span>
+    <span class="badge badge-gray">kube-public</span>
+    <span class="badge badge-gray">kube-node-release</span>
+  </div>
+
+  <p>
+    All Kubernetes control plane components — API server, scheduler, controller manager, kube-proxy — run as pods in <code>kube-system</code>. Application workloads go in <code>default</code> or custom namespaces you create.
+  </p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+      <span>bash — namespace workflow</span>
+    </div>
+    <pre><span class="comment"># Create and switch to dev namespace</span>
+<span class="cmd">kubectl create ns</span> dev
+<span class="cmd">kubectl config set-context</span> --current --namespace=dev
+
+<span class="comment"># Launch pods in dev</span>
+<span class="cmd">kubectl run</span> dev1 --image nginx
+<span class="cmd">kubectl run</span> dev2 --image nginx
+
+<span class="comment"># Create and switch to prod namespace</span>
+<span class="cmd">kubectl create ns</span> prod
+<span class="cmd">kubectl config set-context</span> --current --namespace=prod
+<span class="cmd">kubectl run</span> prod1 --image nginx
+
+<span class="comment"># Cross-namespace visibility</span>
+<span class="cmd">kubectl get pods -n dev</span>
+<span class="cmd">kubectl get pods -n prod</span>
+<span class="cmd">kubectl get pods -A</span>          <span class="comment"># all namespaces at once</span></pre>
+  </div>
+
+  <!-- SECTION 6 -->
+  <h2>RBAC: Least-Privilege Access Control</h2>
+
+  <img class="inline-img" src="https://www.groundcover.com/hs-fs/hubfs/blog/rbac/k8s-rbac-diagram.png" alt="Kubernetes RBAC role binding diagram" />
+  <p class="img-caption">RBAC maps Roles (permissions) to Subjects (users/service accounts) via RoleBindings</p>
+
+  <p>
+    The moment your cluster is shared, you need Role-Based Access Control. RBAC answers two questions: <em>who are you?</em> (authentication) and <em>what can you do?</em> (authorization). In Kubernetes, permissions are defined in Roles, then granted via RoleBindings.
+  </p>
+
+  <div class="pull-quote">
+    <p>"Users are managed outside Kubernetes. Service accounts are Kubernetes-native objects — manageable with kubectl like any other resource."</p>
+  </div>
+
+  <h3>Three-step RBAC setup for user "jack"</h3>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+      <span>yaml — serviceaccount.yml</span>
+    </div>
+    <pre class="yaml"><span class="key">apiVersion:</span> <span class="val">v1</span>
+<span class="key">kind:</span>       <span class="val">ServiceAccount</span>
+<span class="key">metadata:</span>
+  <span class="key">name:</span>      <span class="val">jack</span>
+  <span class="key">namespace:</span> <span class="val">dev</span></pre>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+      <span>yaml — role.yml (read-only on pods)</span>
+    </div>
+    <pre class="yaml"><span class="key">apiVersion:</span> <span class="val">rbac.authorization.k8s.io/v1</span>
+<span class="key">kind:</span>       <span class="val">Role</span>
+<span class="key">metadata:</span>
+  <span class="key">namespace:</span> <span class="val">dev</span>
+  <span class="key">name:</span>      <span class="val">dev-pod-reader</span>
+<span class="key">rules:</span>
+<span class="key">- apiGroups:</span> <span class="val">[""]</span>
+  <span class="key">resources:</span> <span class="val">["pods"]</span>
+  <span class="key">verbs:</span>     <span class="val">["get", "list", "watch"]</span></pre>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+      <span>yaml — rolebinding.yml</span>
+    </div>
+    <pre class="yaml"><span class="key">apiVersion:</span> <span class="val">rbac.authorization.k8s.io/v1</span>
+<span class="key">kind:</span>       <span class="val">RoleBinding</span>
+<span class="key">metadata:</span>
+  <span class="key">name:</span>      <span class="val">read-pods</span>
+  <span class="key">namespace:</span> <span class="val">dev</span>
+<span class="key">subjects:</span>
+<span class="key">- kind:</span>     <span class="val">User</span>
+  <span class="key">name:</span>     <span class="val">jack</span>
+  <span class="key">apiGroup:</span> <span class="val">rbac.authorization.k8s.io</span>
+<span class="key">roleRef:</span>
+  <span class="key">kind:</span>     <span class="val">Role</span>
+  <span class="key">name:</span>     <span class="val">dev-pod-reader</span>
+  <span class="key">apiGroup:</span> <span class="val">rbac.authorization.k8s.io</span></pre>
+  </div>
+
+  <h3>Verifying permissions with impersonation</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+      <span>bash — verify access</span>
+    </div>
+    <pre><span class="comment"># jack CAN list pods</span>
+<span class="cmd">kubectl auth can-i</span> list pods --namespace=dev --as=jack
+<span class="comment"># → yes</span>
+
+<span class="comment"># jack CANNOT create pods</span>
+<span class="cmd">kubectl auth can-i</span> create pods --namespace=dev --as=jack
+<span class="comment"># → no</span></pre>
+  </div>
+
+  <!-- SECTION 7: SCALING -->
+  <h2>Cluster Admin: Scaling Nodes In and Out</h2>
+
+  <p>
+    KOPS uses <strong>Instance Groups (IGs)</strong> to manage node pools. Scaling out is a three-step process: edit the IG to update min/max, update the cluster to push the change, then do a rolling update.
+  </p>
+
+  <table class="cmd-table">
+    <thead>
+      <tr><th>Goal</th><th>Command</th><th>Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>List clusters</td><td>kops get cluster</td><td>Shows all managed clusters</td></tr>
+      <tr><td>Edit worker IG</td><td>kops edit ig --name=… nodes-ap-south-1a</td><td>Change maxSize / minSize</td></tr>
+      <tr><td>Edit master IG</td><td>kops edit ig --name=… master-ap-south-1a</td><td>Same pattern</td></tr>
+      <tr><td>Apply changes</td><td>kops update cluster --name … --yes --admin</td><td>Pushes config to AWS</td></tr>
+      <tr><td>Rolling update</td><td>kops rolling-update cluster --yes</td><td>Cycles nodes safely</td></tr>
+      <tr><td>Delete cluster</td><td>kops delete cluster --name … --yes</td><td>Tears down all AWS resources</td></tr>
+    </tbody>
+  </table>
+
+  <!-- SECTION 8: TROUBLESHOOTING -->
+  <h2>Troubleshooting: When Kubelet Won't Start</h2>
+
+  <p>
+    One of the most common issues on freshly provisioned nodes is kubelet failing to register with systemd. Here's the quick resolution path:
+  </p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div>
+      <span>bash — kubelet recovery</span>
+    </div>
+    <pre><span class="comment"># Reload systemd and restart kubelet</span>
+<span class="cmd">sudo systemctl daemon-reload</span>
+<span class="cmd">sudo systemctl restart kubelet</span>
+
+<span class="comment"># If still missing, add a minimal service file</span>
+<span class="cmd">sudo nano</span> /etc/systemd/system/kubelet.service
+
+<span class="comment"># [Service]</span>
+<span class="comment"># ExecStart=/usr/bin/kubelet</span>
+<span class="comment"># Restart=always</span>
+<span class="comment"># RestartSec=10</span>
+
+<span class="cmd">sudo systemctl enable kubelet</span>
+<span class="cmd">sudo systemctl restart kubelet</span>
+
+<span class="comment"># Tail logs to confirm</span>
+<span class="cmd">sudo journalctl -u kubelet -f</span></pre>
+  </div>
+
+  <!-- CLOSING -->
+  <h2>Wrapping Up</h2>
+
+  <p>
+    KOPS makes Kubernetes on AWS significantly less intimidating. The S3-backed state store gives you a safety net. Namespaces let you share infrastructure without chaos. RBAC closes the authorization loop. And KOPS itself handles the unsexy-but-critical work of ASG management, rolling updates, and cluster lifecycle.
+  </p>
+  <p>
+    The next natural steps from here are adding an Ingress controller, setting up cluster autoscaler, and integrating with AWS IAM roles for service accounts (IRSA) — but that's a story for another day.
+  </p>
+
+  <div class="badge-row" style="margin-top: 32px;">
+    <span class="badge badge-green">Kubernetes</span>
+    <span class="badge badge-green">KOPS</span>
+    <span class="badge badge-amber">AWS</span>
+    <span class="badge badge-amber">EC2</span>
+    <span class="badge badge-gray">RBAC</span>
+    <span class="badge badge-gray">Namespaces</span>
+    <span class="badge badge-gray">DevOps</span>
+    <span class="badge badge-gray">Cloud Engineering</span>
+  </div>
+
+</article>
+
+<footer>
+  <p><strong>DevOps Weekly</strong> · Published March 3, 2025</p>
+  <p style="margin-top: 8px;">Written from hands-on lab notes. Commands tested on Amazon Linux 2 + KOPS v1.25.</p>
+  <div class="footer-tags">
+    <span class="footer-tag"># Kubernetes</span>
+    <span class="footer-tag"># KOPS</span>
+    <span class="footer-tag"># AWS</span>
+    <span class="footer-tag"># Cloud</span>
+    <span class="footer-tag"># DevOps</span>
+  </div>
+</footer>
+
+</body>
+</html>
