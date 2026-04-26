@@ -173,8 +173,9 @@ aws --version
 Run the following on the admin EC2:
 
 ```bash
-# Pull the latest stable kubectl
-curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+# Pull a kubectl that matches the cluster Kubernetes version
+# (kops v1.25.0 provisions Kubernetes 1.25.x by default — keep kubectl within ±1 minor)
+curl -LO "https://dl.k8s.io/release/v1.25.16/bin/linux/amd64/kubectl"
 
 # Pull a known-good kops release
 wget https://github.com/kubernetes/kops/releases/download/v1.25.0/kops-linux-amd64
@@ -184,6 +185,8 @@ chmod +x kops-linux-amd64 kubectl
 sudo mv kubectl /usr/local/bin/kubectl
 sudo mv kops-linux-amd64 /usr/local/bin/kops
 ```
+
+> If you bump kops to a newer minor version, also bump the kubectl pin to match — kubectl is officially supported within one minor version of the cluster.
 
 ### 1.3 Make `/usr/local/bin` Permanent on the PATH (Amazon Linux only)
 
@@ -293,11 +296,15 @@ kubectl get nodes
 kubectl get pods -A
 ```
 
-In the AWS console you will now see EC2 instances inside an Auto Scaling Group with an attached load balancer. By default kops creates a **Classic Load Balancer (CLB)**. To switch to a **Network Load Balancer (NLB)**:
+In the AWS console you will now see EC2 instances inside an Auto Scaling Group with an attached load balancer. By default kops creates a **Classic Load Balancer (CLB)** in front of the API server. To switch to a **Network Load Balancer (NLB)**:
 
 ```bash
 kops edit cluster --name ahmad.k8s.local
-# In the editor, change `loadBalancer.class` from `Classic` to `Network`
+```
+
+Inside the editor, change the value of `spec.api.loadBalancer.class` from `Classic` to `Network`. Save and quit, then apply:
+
+```bash
 kops update cluster --name ahmad.k8s.local --yes --admin
 kops rolling-update cluster --name ahmad.k8s.local --yes
 ```
@@ -325,7 +332,7 @@ vi kops.sh
 
 aws configure
 
-curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+curl -LO "https://dl.k8s.io/release/v1.25.16/bin/linux/amd64/kubectl"
 wget https://github.com/kubernetes/kops/releases/download/v1.25.0/kops-linux-amd64
 chmod +x kops-linux-amd64 kubectl
 sudo mv kubectl /usr/local/bin/kubectl
@@ -463,12 +470,12 @@ kubectl get pods -n grafana
 kubectl get service -n grafana
 ```
 
-Copy the **EXTERNAL-IP** of the `grafana` service into your browser.
+The `EXTERNAL-IP` column for an AWS LoadBalancer service contains a **DNS hostname** (something like `aXXXX.us-east-1.elb.amazonaws.com`), not a literal IP. Copy that DNS name into your browser.
 
 - **Username:** `admin`
 - **Password:** `Root123456`
 
-> If the page does not load, check the security group on the worker nodes (TCP **80** must be open inbound), the ELB health checks, and that you used the load-balancer DNS name not the EC2 instance IP.
+> If the page does not load, check three things: (1) the worker-node security group allows inbound traffic on the **NodePort range (30000-32767)** from the ELB security group — kube-proxy publishes the Grafana service on a NodePort that the CLB targets, (2) the ELB health checks on the AWS console show targets as `InService`, and (3) you are using the ELB **DNS name**, not a worker EC2 IP.
 
 ---
 
@@ -565,7 +572,7 @@ http://<host-ip>:9100
 
 You should see a plain-text page of metrics. Add a scrape job to Prometheus pointing at `http://<host-ip>:9100/metrics` to start collecting them.
 
-> If you ever need to start Grafana on a non-Kubernetes host instead of inside the cluster, the equivalent service command is `sudo systemctl start grafana-server.service`.
+> Useful service commands on the host: `sudo systemctl status node_exporter`, `sudo systemctl restart node_exporter`, and `sudo journalctl -u node_exporter -f` to tail the logs.
 
 ---
 
@@ -608,7 +615,7 @@ aws s3 rb s3://ahmad-kops-state-store.k8s.local --force
 
 - **`kops validate cluster` times out** — usually a missing IAM permission on the admin role, or the EC2 instances are still pulling images. Check `kubectl get nodes` and `kubectl describe node <name>`.
 - **`helm install` errors with `cannot re-use a name`** — a previous release already exists. Run `helm list -A` and `helm uninstall <name> -n <ns>`.
-- **Grafana ELB does not get an external IP** — the kops cluster usually needs the AWS load balancer controller IAM permissions to be intact on the master role; check the controller-manager logs.
+- **Grafana ELB does not get an external hostname** — kops uses the in-tree AWS cloud provider (via `cloud-controller-manager`) to provision a CLB for `type: LoadBalancer` services, not the AWS Load Balancer Controller. The usual culprits are: missing IAM permissions on the master node role, public subnets that are not tagged with `kubernetes.io/role/elb=1`, or worker security groups that block ingress from the CLB. Check `kubectl describe svc grafana -n grafana` and the cloud-controller-manager logs on the master.
 - **Prometheus pods stuck `Pending`** — almost always a PVC binding issue. Confirm the `gp2` storage class exists with `kubectl get sc`.
 - **Dashboard panels show "No data"** — verify the Grafana data source URL is `http://prometheus-server.prometheus.svc.cluster.local/` and the data source dropdown on the dashboard is pointing at it.
 
@@ -616,6 +623,6 @@ aws s3 rb s3://ahmad-kops-state-store.k8s.local --force
 
 ## Credits
 
-Authored and maintained by **Ahmad**. The original learning notes that seeded this repo were shared by Reyaz Sir — this README rewrites, expands, and re-architects that material into a self-contained guide with my own conventions and diagrams.
+Authored and maintained by **Ahmad**.
 
 Pull requests, issues, and improvements are welcome.
