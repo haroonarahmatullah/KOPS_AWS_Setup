@@ -47,6 +47,7 @@ If you just want a learning project that mirrors what production Kubernetes team
 
 The diagram below summarises the AWS footprint that kops builds for us — a dedicated admin EC2 box, the S3 bucket holding cluster state, the load balancer fronting the API server, the master node hosting the control-plane components, and the auto-scaled worker pool running our workloads.
 
+![Kubernetes Cluster Architecture](architecture/kubernetes-cluster-architecture.svg)
 
 A high-level Mermaid view of the same idea (renders directly on GitHub):
 
@@ -622,10 +623,6 @@ aws s3 rb s3://ahmad-kops-state-store.k8s.local --force
 
 ## Credits
 
-<<<<<<< HEAD
 Authored and maintained by **Ahmad**.
-=======
-Authored and maintained by **Ahmad**. 
->>>>>>> f95e353e120c87840b44b1e2f35758710f5bc02c
 
 Pull requests, issues, and improvements are welcome.
