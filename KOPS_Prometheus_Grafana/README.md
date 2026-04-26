@@ -615,6 +615,6 @@ aws s3 rb s3://ahmad-kops-state-store.k8s.local --force
 
 ## Credits
 
-Authored and maintained by **Ahmad**. The original learning notes that seeded this repo were shared by Reyaz Sir — this README rewrites, expands, and re-architects that material into a self-contained guide with my own conventions and diagrams.
+Authored and maintained by **Ahmad**. 
 
 Pull requests, issues, and improvements are welcome.
