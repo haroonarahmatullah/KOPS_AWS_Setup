@@ -1,0 +1,181 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 740" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <linearGradient id="clusterBg" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#eef4ff"/>
+      <stop offset="100%" stop-color="#dbe7ff"/>
+    </linearGradient>
+    <linearGradient id="promGrad" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#e6522c"/>
+      <stop offset="100%" stop-color="#a8341c"/>
+    </linearGradient>
+    <linearGradient id="grafGrad" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#f46800"/>
+      <stop offset="100%" stop-color="#b04600"/>
+    </linearGradient>
+    <linearGradient id="nodeexpGrad" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#26a69a"/>
+      <stop offset="100%" stop-color="#00695c"/>
+    </linearGradient>
+    <linearGradient id="alertGrad" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#9c27b0"/>
+      <stop offset="100%" stop-color="#4a148c"/>
+    </linearGradient>
+    <linearGradient id="userGrad" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#37474f"/>
+      <stop offset="100%" stop-color="#102027"/>
+    </linearGradient>
+    <marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#37474f"/>
+    </marker>
+    <marker id="arrPull" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#e6522c"/>
+    </marker>
+    <marker id="arrPush" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#0277bd"/>
+    </marker>
+    <filter id="sh" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="2" dy="3" stdDeviation="3" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <!-- Title -->
+  <text x="550" y="34" text-anchor="middle" font-size="22" font-weight="700" fill="#0d1b2a">Kubernetes Monitoring Architecture — Prometheus &amp; Grafana</text>
+  <text x="550" y="56" text-anchor="middle" font-size="13" fill="#37474f">Author: Ahmad — Helm-installed stack on a kops cluster</text>
+
+  <!-- External user -->
+  <g filter="url(#sh)">
+    <rect x="40" y="100" width="170" height="80" rx="10" fill="url(#userGrad)"/>
+    <text x="125" y="130" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">DevOps Engineer</text>
+    <text x="125" y="150" text-anchor="middle" fill="#fff" font-size="11">Browser → Grafana UI</text>
+    <text x="125" y="168" text-anchor="middle" fill="#fff" font-size="11">port 3000 (LB)</text>
+  </g>
+
+  <!-- Notification channels -->
+  <g filter="url(#sh)">
+    <rect x="900" y="100" width="170" height="80" rx="10" fill="url(#alertGrad)"/>
+    <text x="985" y="130" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">Alert Channels</text>
+    <text x="985" y="150" text-anchor="middle" fill="#fff" font-size="11">Slack · Email · PagerDuty</text>
+    <text x="985" y="168" text-anchor="middle" fill="#fff" font-size="11">Teams</text>
+  </g>
+
+  <!-- Cluster boundary -->
+  <rect x="40" y="210" width="1030" height="510" rx="14" fill="url(#clusterBg)" stroke="#326ce5" stroke-width="2"/>
+  <text x="60" y="235" font-size="14" font-weight="700" fill="#1d4fa8">Kubernetes Cluster (provisioned via kops)</text>
+
+  <!-- Grafana namespace -->
+  <g filter="url(#sh)">
+    <rect x="60" y="260" width="280" height="200" rx="10" fill="#fff" stroke="#f46800" stroke-width="2"/>
+    <rect x="60" y="260" width="280" height="36" rx="10" fill="url(#grafGrad)"/>
+    <text x="200" y="284" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">Namespace: grafana</text>
+
+    <rect x="80" y="310" width="240" height="60" rx="8" fill="#fff3e0" stroke="#f46800"/>
+    <text x="200" y="332" text-anchor="middle" font-size="13" font-weight="700" fill="#e65100">Grafana Pod</text>
+    <text x="200" y="352" text-anchor="middle" font-size="11" fill="#5d4037">Dashboards · port 3000</text>
+
+    <rect x="80" y="380" width="240" height="36" rx="8" fill="#e1f5fe" stroke="#0288d1"/>
+    <text x="200" y="402" text-anchor="middle" font-size="11" fill="#01579b">Service: LoadBalancer (ELB)</text>
+
+    <rect x="80" y="424" width="240" height="28" rx="8" fill="#f3e5f5" stroke="#7b1fa2"/>
+    <text x="200" y="442" text-anchor="middle" font-size="10" fill="#4a148c">PVC (gp2) for dashboards</text>
+  </g>
+
+  <!-- Prometheus namespace -->
+  <g filter="url(#sh)">
+    <rect x="400" y="260" width="320" height="200" rx="10" fill="#fff" stroke="#e6522c" stroke-width="2"/>
+    <rect x="400" y="260" width="320" height="36" rx="10" fill="url(#promGrad)"/>
+    <text x="560" y="284" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">Namespace: prometheus</text>
+
+    <rect x="420" y="310" width="135" height="60" rx="8" fill="#fdecea" stroke="#e6522c"/>
+    <text x="487" y="332" text-anchor="middle" font-size="12" font-weight="700" fill="#a8341c">prometheus-server</text>
+    <text x="487" y="352" text-anchor="middle" font-size="10" fill="#6d2d1c">TSDB · port 9090</text>
+
+    <rect x="565" y="310" width="135" height="60" rx="8" fill="#fdecea" stroke="#e6522c"/>
+    <text x="632" y="332" text-anchor="middle" font-size="12" font-weight="700" fill="#a8341c">alertmanager</text>
+    <text x="632" y="352" text-anchor="middle" font-size="10" fill="#6d2d1c">routes alerts</text>
+
+    <rect x="420" y="380" width="135" height="34" rx="8" fill="#fff8e1" stroke="#f9a825"/>
+    <text x="487" y="402" text-anchor="middle" font-size="11" fill="#5d4037">kube-state-metrics</text>
+
+    <rect x="565" y="380" width="135" height="34" rx="8" fill="#fff8e1" stroke="#f9a825"/>
+    <text x="632" y="402" text-anchor="middle" font-size="11" fill="#5d4037">pushgateway</text>
+
+    <rect x="420" y="420" width="280" height="30" rx="8" fill="#f3e5f5" stroke="#7b1fa2"/>
+    <text x="560" y="440" text-anchor="middle" font-size="10" fill="#4a148c">PVCs (gp2) for TSDB &amp; alertmanager</text>
+  </g>
+
+  <!-- Metric server box -->
+  <g filter="url(#sh)">
+    <rect x="780" y="260" width="280" height="100" rx="10" fill="#fff" stroke="#26a69a" stroke-width="2"/>
+    <rect x="780" y="260" width="280" height="36" rx="10" fill="url(#nodeexpGrad)"/>
+    <text x="920" y="284" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">kube-system</text>
+    <rect x="800" y="310" width="240" height="40" rx="8" fill="#e0f2f1" stroke="#26a69a"/>
+    <text x="920" y="334" text-anchor="middle" font-size="12" font-weight="600" fill="#00695c">metrics-server (HPA)</text>
+  </g>
+
+  <!-- Worker nodes with node exporters -->
+  <g filter="url(#sh)">
+    <rect x="60" y="500" width="1000" height="200" rx="10" fill="#fff" stroke="#2e7d32" stroke-width="2"/>
+    <rect x="60" y="500" width="1000" height="36" rx="10" fill="#2e7d32"/>
+    <text x="560" y="524" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">Cluster Nodes (DaemonSet collects host metrics)</text>
+
+    <!-- Node 1 -->
+    <rect x="90" y="550" width="290" height="130" rx="8" fill="#f1f8e9" stroke="#558b2f"/>
+    <text x="235" y="574" text-anchor="middle" font-size="13" font-weight="700" fill="#33691e">Worker Node 1</text>
+    <rect x="110" y="588" width="250" height="36" rx="6" fill="url(#nodeexpGrad)"/>
+    <text x="235" y="610" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">node-exporter (port 9100)</text>
+    <text x="235" y="640" text-anchor="middle" font-size="10" fill="#33691e">CPU · Memory · Disk · Network</text>
+    <text x="235" y="658" text-anchor="middle" font-size="10" fill="#33691e">App pods exporting /metrics</text>
+
+    <!-- Node 2 -->
+    <rect x="405" y="550" width="290" height="130" rx="8" fill="#f1f8e9" stroke="#558b2f"/>
+    <text x="550" y="574" text-anchor="middle" font-size="13" font-weight="700" fill="#33691e">Worker Node 2</text>
+    <rect x="425" y="588" width="250" height="36" rx="6" fill="url(#nodeexpGrad)"/>
+    <text x="550" y="610" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">node-exporter (port 9100)</text>
+    <text x="550" y="640" text-anchor="middle" font-size="10" fill="#33691e">CPU · Memory · Disk · Network</text>
+    <text x="550" y="658" text-anchor="middle" font-size="10" fill="#33691e">App pods exporting /metrics</text>
+
+    <!-- Master -->
+    <rect x="720" y="550" width="320" height="130" rx="8" fill="#e3f2fd" stroke="#1565c0"/>
+    <text x="880" y="574" text-anchor="middle" font-size="13" font-weight="700" fill="#0d47a1">Master Node (control plane)</text>
+    <rect x="740" y="588" width="280" height="36" rx="6" fill="url(#nodeexpGrad)"/>
+    <text x="880" y="610" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">node-exporter (port 9100)</text>
+    <text x="880" y="640" text-anchor="middle" font-size="10" fill="#0d47a1">api-server · etcd · scheduler metrics</text>
+    <text x="880" y="658" text-anchor="middle" font-size="10" fill="#0d47a1">/metrics endpoints scraped</text>
+  </g>
+
+  <!-- Connections -->
+  <!-- User -> Grafana service -->
+  <line x1="210" y1="160" x2="200" y2="380" stroke="#0277bd" stroke-width="2.5" marker-end="url(#arrPush)"/>
+  <text x="125" y="280" font-size="11" fill="#0277bd">HTTPS via ELB</text>
+
+  <!-- Grafana -> Prometheus (data source) -->
+  <line x1="320" y1="340" x2="420" y2="340" stroke="#37474f" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="370" y="332" text-anchor="middle" font-size="11" fill="#37474f">PromQL</text>
+  <text x="370" y="356" text-anchor="middle" font-size="10" fill="#37474f">data source</text>
+
+  <!-- Prometheus -> Alertmanager already inside box; Alertmanager -> external alert channels -->
+  <line x1="700" y1="340" x2="900" y2="140" stroke="#9c27b0" stroke-width="2" marker-end="url(#arr)" stroke-dasharray="6 4"/>
+  <text x="820" y="240" font-size="11" fill="#7b1fa2">webhooks / SMTP</text>
+
+  <!-- Prometheus pulls from node-exporters -->
+  <line x1="487" y1="370" x2="235" y2="588" stroke="#e6522c" stroke-width="2" marker-end="url(#arrPull)"/>
+  <line x1="560" y1="370" x2="550" y2="588" stroke="#e6522c" stroke-width="2" marker-end="url(#arrPull)"/>
+  <line x1="632" y1="370" x2="880" y2="588" stroke="#e6522c" stroke-width="2" marker-end="url(#arrPull)"/>
+  <text x="380" y="490" font-size="11" fill="#a8341c" font-weight="700">Pull-based scrape (HTTP /metrics)</text>
+
+  <!-- metrics-server connection -->
+  <line x1="780" y1="330" x2="720" y2="330" stroke="#37474f" stroke-width="1.5" marker-end="url(#arr)" stroke-dasharray="4 3"/>
+  <text x="745" y="322" text-anchor="middle" font-size="10" fill="#37474f">HPA</text>
+
+  <!-- Legend -->
+  <g transform="translate(60, 690)">
+    <rect x="0" y="0" width="14" height="14" fill="#e6522c"/>
+    <text x="22" y="12" font-size="11" fill="#37474f">Prometheus pull (scrape)</text>
+    <rect x="180" y="0" width="14" height="14" fill="#0277bd"/>
+    <text x="202" y="12" font-size="11" fill="#37474f">User HTTPS</text>
+    <rect x="320" y="0" width="14" height="14" fill="#9c27b0"/>
+    <text x="342" y="12" font-size="11" fill="#37474f">Alert routing</text>
+    <rect x="470" y="0" width="14" height="14" fill="#37474f"/>
+    <text x="492" y="12" font-size="11" fill="#37474f">Internal cluster traffic</text>
+  </g>
+</svg>
