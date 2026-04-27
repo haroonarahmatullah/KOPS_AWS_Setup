@@ -34,7 +34,7 @@ Running Kubernetes is the easy part — *understanding* what your cluster is doi
 
 - Stand up a multi-node Kubernetes cluster on AWS in a repeatable way using **kops** (no managed control plane, no hand-holding from EKS).
 - Persist every cluster mutation in **S3** so the cluster state can be re-hydrated even if my admin box dies.
-- Bolt on a **Prometheus + Grafana** stack via Helm so I can see CPU, memory, pod, node, PV/PVC, and API-server health at a glance.
+- Built on a **Prometheus + Grafana** stack via Helm so I can see CPU, memory, pod, node, PV/PVC, and API-server health at a glance.
 - Pull host-level metrics out of every node with **Node Exporter** to fill in the gaps that kube-state-metrics does not cover.
 
 If you just want a learning project that mirrors what production Kubernetes teams actually do, this is it.
@@ -226,11 +226,15 @@ You can create the bucket from the AWS console, or run:
 ```bash
 # Create the bucket (must be globally unique — change the name)
 aws s3api create-bucket \
-  --bucket ahmad-kops-state-store.k8s.local \
-  --region us-east-1 \
-  --create-bucket-configuration LocationConstraint=us-east-1
+    --bucket ahmad-kops-state-store.k8s.local \
+    --region us-east-1
 ```
-
+```bash
+# Enable versioning on that bucket
+aws s3api put-bucket-versioning \
+    --bucket ahmad-kops-state-store.k8s.local \
+    --versioning-configuration Status=Enabled
+```
 > Heads up: for `us-east-1` AWS does **not** require `--create-bucket-configuration`, but leaving it in does no harm in other regions. Adjust to your region.
 
 ```bash
